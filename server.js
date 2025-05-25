@@ -8,7 +8,10 @@ const authRoutes = require('./routes/auth');
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: '*', // o pon el dominio exacto de tu frontend si está en otro lado
+  credentials: true
+}));
 app.use(express.json());
 
 // API Routes
