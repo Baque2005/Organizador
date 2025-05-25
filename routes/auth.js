@@ -2,15 +2,16 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken'); // 🔑 Agregado
 const { Op } = require('sequelize');
 
-// Validación básica de correo
+const JWT_SECRET = process.env.JWT_SECRET || 'claveSuperSecreta123'; // ✅ Lee desde .env
+
 function validarEmail(email) {
   const regex = /^\S+@\S+\.\S+$/;
   return regex.test(email);
 }
 
-// Validación de contraseña segura
 function validarPassword(password) {
   return password.length >= 6;
 }
@@ -18,9 +19,7 @@ function validarPassword(password) {
 // 🟢 REGISTRO
 router.post('/register', async (req, res) => {
   const { nombre, apellido, cedula, correo, contrasena } = req.body;
-  
 
-  // Validaciones básicas
   if (!nombre || !apellido || !cedula || !correo || !contrasena) {
     return res.status(400).json({ success: false, mensaje: '⚠️ Todos los campos son obligatorios.' });
   }
@@ -81,19 +80,27 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, mensaje: '❌ Contraseña incorrecta.' });
     }
 
-    // Si quieres agregar JWT aquí para autenticación
-    // const token = jwt.sign({ id: usuario.id }, 'claveSecreta', { expiresIn: '1h' });
+    // 🔑 Generar token JWT
+    const token = jwt.sign(
+      {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        email: usuario.email,
+      },
+      JWT_SECRET,
+      { expiresIn: '2h' } // Puedes cambiar el tiempo
+    );
 
     res.json({
       success: true,
       mensaje: '✅ Inicio de sesión exitoso.',
+      token,
       usuario: {
         id: usuario.id,
         nombre: usuario.nombre,
         apellido: usuario.apellido,
         correo: usuario.email
       }
-      // , token // Si activas JWT
     });
   } catch (error) {
     console.error('❌ Error en el login:', error);
