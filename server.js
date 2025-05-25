@@ -9,7 +9,7 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: '*', // o pon el dominio exacto de tu frontend si está en otro lado
+  origin: process.env.FRONTEND_URL || '*', // o pon el dominio exacto de tu frontend si está en otro lado
   credentials: true
 }));
 app.use(express.json());
