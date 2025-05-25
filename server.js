@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const sequelize = require('./config/db');
 const authRoutes = require('./routes/auth');
-const PORT = process.env.PORT || 5000;
+
 
 const app = express();
 
@@ -24,9 +24,10 @@ app.get('*', (req, res) => {
 
 sequelize.sync().then(() => {
   console.log('🟢 Base de datos sincronizada con Sequelize');
+  const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
-  console.log(`🟢 Servidor ejecutándose en el puerto ${PORT}`);
-});
+    console.log(`🟢 Servidor ejecutándose en http://localhost:${PORT}`);
+  });
 }).catch(err => {
   console.error('🔴 Error al conectar con PostgreSQL:', err);
 });
