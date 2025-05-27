@@ -10,7 +10,7 @@ const Inicio = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
-    navigate('/dashboard');
+    navigate('/Login');
   };
 
   return (
