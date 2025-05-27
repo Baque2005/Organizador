@@ -1,7 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import logoUG from '../assets/LogoUGcolor.png'; // Asegúrate de tener esta imagen en assets
-import { BellIcon, ClipboardDocumentListIcon, UserIcon } from '@heroicons/react/24/outline';
+import logoUG from '../assets/LogoUGcolor.png';
+import {
+  ClipboardDocumentListIcon,
+  Bars3BottomLeftIcon,
+  AdjustmentsHorizontalIcon,
+  CheckCircleIcon,
+  ChartBarIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
+  DocumentArrowDownIcon,
+  BellIcon
+} from '@heroicons/react/24/outline';
 
 const Inicio = () => {
   const usuario = JSON.parse(localStorage.getItem('usuario'));
@@ -13,86 +23,56 @@ const Inicio = () => {
     navigate('/Login');
   };
 
+  const opciones = [
+    { title: 'Gestionar Tareas', icon: <ClipboardDocumentListIcon className="h-6 w-6" />, path: '/tareas' },
+    { title: 'Subtareas', icon: <Bars3BottomLeftIcon className="h-6 w-6" />, path: '/subtareas' },
+    { title: 'Categorías y Prioridades', icon: <AdjustmentsHorizontalIcon className="h-6 w-6" />, path: '/categorias' },
+    { title: 'Estados de Tareas', icon: <CheckCircleIcon className="h-6 w-6" />, path: '/estados' },
+    { title: 'Estadísticas Visuales', icon: <ChartBarIcon className="h-6 w-6" />, path: '/estadisticas' },
+    { title: 'Filtros y Búsqueda', icon: <MagnifyingGlassIcon className="h-6 w-6" />, path: '/busqueda' },
+    { title: 'Historial de Cambios', icon: <PencilSquareIcon className="h-6 w-6" />, path: '/historial' },
+    { title: 'Exportar a PDF/CSV', icon: <DocumentArrowDownIcon className="h-6 w-6" />, path: '/exportar' },
+    { title: 'Notificaciones', icon: <BellIcon className="h-6 w-6" />, path: '/notificaciones' },
+  ];
+
+  const handleNavigate = (path) => navigate(path);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-800 to-slate-900 text-white flex flex-col items-center p-6 md:p-10">
-      {/* HEADER */}
-      <header className="w-full max-w-7xl flex justify-between items-center mb-10">
-        <div className="flex items-center space-x-4">
-          <img src={logoUG} alt="Logo UG" className="h-12" />
-          <h1 className="text-3xl font-bold tracking-tight">SYSTECLINX</h1>
+    <div className="min-h-screen flex bg-slate-900 text-white">
+      {/* SIDEBAR */}
+      <aside className="w-64 bg-indigo-900 p-6 flex flex-col space-y-4 shadow-lg">
+        <div className="flex items-center space-x-3 mb-8">
+          <img src={logoUG} alt="Logo UG" className="h-10" />
+          <h1 className="text-2xl font-bold">SYSTECLINX</h1>
         </div>
-        <div className="text-right">
-          <p className="text-sm">
-            Bienvenido, <span className="font-semibold">{usuario?.nombres ?? 'Usuario'}</span>
-          </p>
+        {opciones.map((op, i) => (
+          <button
+            key={i}
+            onClick={() => handleNavigate(op.path)}
+            className="flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-left"
+          >
+            {op.icon}
+            <span>{op.title}</span>
+          </button>
+        ))}
+        <div className="mt-auto text-sm">
+          <p className="mb-2">Bienvenido, <span className="font-semibold">{usuario?.nombres ?? 'Usuario'}</span></p>
           <button
             onClick={handleLogout}
-            className="mt-2 px-4 py-2 bg-red-600 rounded hover:bg-red-500 transition"
+            className="w-full px-4 py-2 bg-red-600 rounded hover:bg-red-500 transition"
           >
             Cerrar sesión
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* CONTENIDO PRINCIPAL */}
-      <main className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Funcionalidades principales */}
-        <section className="col-span-2 bg-white text-gray-900 p-6 rounded-2xl shadow-xl">
-          <h2 className="text-2xl font-bold mb-4">Panel de Funcionalidades</h2>
-          <div className="grid sm:grid-cols-2 gap-6">
-            {[
-              {
-                icon: <ClipboardDocumentListIcon className="h-10 w-10 text-indigo-600" />,
-                title: 'Gestionar Tareas',
-                desc: 'Crea, edita, organiza y elimina tus tareas según prioridad y fecha.',
-              },
-              {
-                icon: <UserIcon className="h-10 w-10 text-green-600" />,
-                title: 'Asignaciones Grupales',
-                desc: 'Coordina tareas entre miembros del equipo y establece responsables.',
-              },
-              {
-                icon: <BellIcon className="h-10 w-10 text-yellow-600" />,
-                title: 'Recordatorios',
-                desc: 'Recibe alertas automáticas sobre tareas próximas a vencer.',
-              },
-              {
-                icon: (
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
-                    className="h-10 w-10"
-                    alt="Estadísticas"
-                  />
-                ),
-                title: 'Estadísticas de Actividad',
-                desc: 'Visualiza tu progreso semanal y el cumplimiento de tus metas.',
-              },
-            ].map((item, index) => (
-              <div key={index} className="flex items-start space-x-4">
-                <div>{item.icon}</div>
-                <div>
-                  <h3 className="font-semibold text-lg">{item.title}</h3>
-                  <p className="text-sm text-gray-600">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Vista previa tareas del usuario */}
-        <section className="bg-white text-gray-900 p-6 rounded-2xl shadow-xl">
+      {/* MAIN CONTENT */}
+      <main className="flex-1 p-8 space-y-8 bg-gradient-to-br from-slate-800 to-slate-900">
+        <section className="bg-white text-gray-900 p-6 rounded-xl shadow-md">
           <h2 className="text-xl font-bold mb-4">Tareas Recientes</h2>
           <ul className="space-y-3">
-            {[
-              'Revisar entrega del proyecto final',
-              'Completar informe de avances',
-              'Enviar feedback al grupo 3',
-              'Programar reunión con el tutor',
-            ].map((task, idx) => (
-              <li
-                key={idx}
-                className="flex items-center justify-between bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200"
-              >
+            {[ 'Revisar entrega del proyecto final', 'Completar informe de avances', 'Enviar feedback al grupo 3', 'Programar reunión con el tutor' ].map((task, idx) => (
+              <li key={idx} className="flex items-center justify-between bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200">
                 <span>{task}</span>
                 <span className="text-xs text-gray-500">Pendiente</span>
               </li>
@@ -100,32 +80,26 @@ const Inicio = () => {
           </ul>
         </section>
 
-        {/* Recordatorios o notificaciones */}
-        <section className="col-span-1 bg-white text-gray-900 p-6 rounded-2xl shadow-xl">
+        <section className="bg-white text-gray-900 p-6 rounded-xl shadow-md">
           <h2 className="text-xl font-bold mb-4">Recordatorios</h2>
           <div className="space-y-3">
-            {[
-              { date: '25/05', text: 'Entregar actividad de Estructura de Datos' },
-              { date: '27/05', text: 'Revisión de código en grupo' },
-              { date: '29/05', text: 'Evaluación parcial' },
-            ].map((reminder, idx) => (
-              <div
-                key={idx}
-                className="flex justify-between bg-yellow-100 text-yellow-900 px-4 py-2 rounded-lg"
-              >
+            {[ { date: '25/05', text: 'Entregar actividad de Estructura de Datos' }, { date: '27/05', text: 'Revisión de código en grupo' }, { date: '29/05', text: 'Evaluación parcial' } ].map((reminder, idx) => (
+              <div key={idx} className="flex justify-between bg-yellow-100 text-yellow-900 px-4 py-2 rounded-lg">
                 <span className="font-medium">{reminder.date}</span>
                 <span className="text-sm">{reminder.text}</span>
               </div>
             ))}
           </div>
         </section>
-      </main>
 
-      {/* FOOTER */}
-      <footer className="w-full mt-16 border-t border-white/30 pt-6 text-center text-sm text-white/80">
-        <p>© 2025 SYSTECLINX - Universidad de Guayaquil</p>
-        <p>Desarrollado por Ronald Baque y equipo académico</p>
-      </footer>
+        <section className="bg-white text-gray-900 p-6 rounded-xl shadow-md">
+          <h2 className="text-xl font-bold mb-4">Resumen del Organizador</h2>
+          <p className="text-gray-700 text-sm">
+            Bienvenido a tu panel organizador. Desde aquí puedes navegar entre tareas, subtareas, establecer prioridades,
+            monitorear tu progreso y recibir recordatorios importantes. Haz clic en el menú de la izquierda para comenzar a gestionar tus pendientes de forma eficaz.
+          </p>
+        </section>
+      </main>
     </div>
   );
 };
