@@ -1,6 +1,15 @@
+// backend/config/db.js
 const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
-// Usa cadena de conexión en lugar de parámetros separados
-const sequelize = new Sequelize('postgres://postgres:12345678@localhost:5432/gestion_tareas');
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false, // Importante para Render
+    },
+  },
+});
 
 module.exports = sequelize;

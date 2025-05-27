@@ -1,39 +1,43 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logoUG from '../assets/LogoUGcolor.png';
-import { useNavigate } from 'react-router-dom';
+
 const apiUrl = process.env.REACT_APP_API_BASE_URL;
+
 const Login = () => {
   const [correo, setCorreo] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [mensaje, setMensaje] = useState('');
   const navigate = useNavigate();
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/auth/login`, {
-      correo,
-      contrasena
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post(`${apiUrl}/api/auth/login`, {
+        correo,
+        contrasena
+      });
 
-    if (res.data.token) {
-      localStorage.setItem('token', res.data.token);
-      navigate('/dashboard'); // redirige al dashboard
+      if (res.data.token) {
+        localStorage.setItem('token', res.data.token); // ✅ guardar token
+        localStorage.setItem('usuario', JSON.stringify(res.data.usuario)); // opcional: guardar usuario
+
+        setMensaje('✅ Sesión iniciada correctamente.');
+        navigate('/inicio'); // 🔁 redirige a la página de inicio
+      } else {
+        setMensaje('❌ Algo salió mal. Intenta de nuevo.');
+      }
+    } catch (err) {
+      if (err.response?.data?.mensaje) {
+        setMensaje(err.response.data.mensaje);
+      } else {
+        setMensaje('❌ Error al iniciar sesión. Intenta de nuevo.');
+      }
     }
+  };
 
-    setMensaje(res.data.mensaje || 'Inicio de sesión exitoso');
-  } catch (err) {
-    if (err.response?.data?.mensaje) {
-      setMensaje(err.response.data.mensaje);
-    } else {
-      setMensaje('❌ Error al iniciar sesión. Intenta de nuevo.');
-    }
-  }
-};
-
- return (
+  return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
       <div className="absolute inset-0">
         <img
@@ -54,9 +58,26 @@ const handleSubmit = async (e) => {
             Iniciar Sesión
           </h2>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <input type="email" placeholder="Correo electrónico" className="w-full p-4 border border-white bg-transparent rounded-xl placeholder-gray-300 text-white" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
-            <input type="password" placeholder="Contraseña" className="w-full p-4 border border-white bg-transparent rounded-xl placeholder-gray-300 text-white" value={contrasena} onChange={(e) => setContrasena(e.target.value)} required />
-            <button type="submit" className="w-full bg-cyan-500 text-white py-3 rounded-xl hover:bg-cyan-400 transition duration-200 font-semibold">
+            <input
+              type="email"
+              placeholder="Correo electrónico"
+              className="w-full p-4 border border-white bg-transparent rounded-xl placeholder-gray-300 text-white"
+              value={correo}
+              onChange={(e) => setCorreo(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              className="w-full p-4 border border-white bg-transparent rounded-xl placeholder-gray-300 text-white"
+              value={contrasena}
+              onChange={(e) => setContrasena(e.target.value)}
+              required
+            />
+            <button
+              type="submit"
+              className="w-full bg-cyan-500 text-white py-3 rounded-xl hover:bg-cyan-400 transition duration-200 font-semibold"
+            >
               Ingresar
             </button>
           </form>
@@ -73,7 +94,6 @@ const handleSubmit = async (e) => {
           </p>
         </div>
 
-        {/* Pie de página decorado */}
         <div className="bg-white/10 text-xs text-gray-200 text-center py-4 px-6 border-t border-gray-400/20">
           <p>Desarrollado por Ronald Baque, Briggitte Mora, Jennifer Malave y Damian Leon</p>
           <p className="mt-2 font-semibold">© 2025 SYSTECLINX. Todos los derechos reservados.</p>
