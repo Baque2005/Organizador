@@ -1,3 +1,4 @@
+
 const { Op } = require('sequelize');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
@@ -17,23 +18,26 @@ exports.registerUser = async (req, res) => {
   try {
     console.log('🟡 Datos recibidos en el registro:', req.body);
 
-    const { nombre, apellido, cedula, email, password } = req.body;
+    // Aquí adaptamos a lo que envía tu frontend
+    const { nombre, apellido, cedula, correo, contrasena } = req.body;
 
-    if (!nombre || !apellido || !cedula || !email || !password) {
+    // Validación básica
+    if (!nombre || !apellido || !cedula || !correo || !contrasena) {
       return res.status(400).json({ success: false, mensaje: '⚠️ Todos los campos son obligatorios.' });
     }
 
-    if (!validarEmail(email)) {
+    if (!validarEmail(correo)) {
       return res.status(400).json({ success: false, mensaje: '⚠️ Correo electrónico no válido.' });
     }
 
-    if (!validarPassword(password)) {
+    if (!validarPassword(contrasena)) {
       return res.status(400).json({ success: false, mensaje: '⚠️ La contraseña debe tener al menos 6 caracteres.' });
     }
 
+    // Verificar si ya existe usuario con ese email o cédula
     const usuarioExistente = await User.findOne({
       where: {
-        [Op.or]: [{ email }, { cedula }]
+        [Op.or]: [{ email: correo }, { cedula }]
       }
     });
 
@@ -41,54 +45,23 @@ exports.registerUser = async (req, res) => {
       return res.status(400).json({ success: false, mensaje: '⚠️ Ya existe un usuario con ese correo o cédula.' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Encriptar contraseña
+    const hashedPassword = await bcrypt.hash(contrasena, 10);
 
+    // Crear usuario con rol 'miembro' asignado por defecto
     await User.create({
       nombre,
       apellido,
       cedula,
-      email,
-      password: hashedPassword
+      email: correo,
+      password: hashedPassword,
+      rol: 'miembro'   // <--- Aquí está la asignación del rol predeterminado
     });
 
-    res.status(201).json({ success: true, mensaje: '✅ Usuario registrado correctamente.' });
+    return res.status(201).json({ success: true, mensaje: '✅ Usuario registrado correctamente.' });
+
   } catch (error) {
     console.error('❌ Error en el registro:', error);
-    res.status(500).json({ success: false, mensaje: '❌ Error en el servidor. Inténtalo más tarde.' });
-  }
-};
-
-exports.loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ success: false, mensaje: '⚠️ Correo y contraseña son obligatorios.' });
-    }
-
-    const usuario = await User.findOne({ where: { email } });
-
-    if (!usuario) {
-      return res.status(401).json({ success: false, mensaje: '❌ Correo no registrado.' });
-    }
-
-    const passwordValido = await bcrypt.compare(password, usuario.password);
-    if (!passwordValido) {
-      return res.status(401).json({ success: false, mensaje: '❌ Contraseña incorrecta.' });
-    }
-
-    res.json({
-      success: true,
-      mensaje: '✅ Inicio de sesión exitoso.',
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        apellido: usuario.apellido,
-        email: usuario.email
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error en el login:', error);
-    res.status(500).json({ success: false, mensaje: '❌ Error del servidor. Intenta de nuevo más tarde.' });
+    return res.status(500).json({ success: false, mensaje: '❌ Error en el servidor. Inténtalo más tarde.' });
   }
 };

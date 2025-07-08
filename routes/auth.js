@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
+const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken'); // 🔑 Agregado
-const { Op } = require('sequelize');
+const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'claveSuperSecreta123'; // ✅ Lee desde .env
+const JWT_SECRET = process.env.JWT_SECRET || 'claveSuperSecreta123';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL_LOCAL
+});
 
 function validarEmail(email) {
   const regex = /^\S+@\S+\.\S+$/;
@@ -18,7 +21,7 @@ function validarPassword(password) {
 
 // 🟢 REGISTRO
 router.post('/register', async (req, res) => {
-  const { nombre, apellido, cedula, correo, contrasena } = req.body;
+  const { nombre, apellido, cedula, correo, contrasena, rol } = req.body;
 
   if (!nombre || !apellido || !cedula || !correo || !contrasena) {
     return res.status(400).json({ success: false, mensaje: '⚠️ Todos los campos son obligatorios.' });
@@ -33,25 +36,22 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    const usuarioExistente = await User.findOne({
-      where: {
-        [Op.or]: [{ email: correo }, { cedula }]
-      }
-    });
+    const { rows: usuarios } = await pool.query(
+      'SELECT * FROM users WHERE email = $1 OR cedula = $2',
+      [correo, cedula]
+    );
 
-    if (usuarioExistente) {
+    if (usuarios.length > 0) {
       return res.status(400).json({ success: false, mensaje: '⚠️ Ya existe un usuario con ese correo o cédula.' });
     }
 
     const hashedPassword = await bcrypt.hash(contrasena, 10);
+    const rolAsignado = rol || 'miembro'; // Por defecto será miembro si no se envía
 
-    await User.create({
-      nombre,
-      apellido,
-      cedula,
-      email: correo,
-      password: hashedPassword,
-    });
+    await pool.query(
+      'INSERT INTO users (nombre, apellido, cedula, email, password, rol) VALUES ($1, $2, $3, $4, $5, $6)',
+      [nombre, apellido, cedula, correo, hashedPassword, rolAsignado]
+    );
 
     res.status(201).json({ success: true, mensaje: '✅ Usuario registrado correctamente.' });
   } catch (error) {
@@ -69,7 +69,12 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const usuario = await User.findOne({ where: { email: correo } });
+    const { rows } = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [correo]
+    );
+
+    const usuario = rows[0];
 
     if (!usuario) {
       return res.status(401).json({ success: false, mensaje: '❌ Correo no registrado.' });
@@ -80,15 +85,15 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ success: false, mensaje: '❌ Contraseña incorrecta.' });
     }
 
-    // 🔑 Generar token JWT
     const token = jwt.sign(
       {
         id: usuario.id,
         nombre: usuario.nombre,
         email: usuario.email,
+        rol: usuario.rol
       },
       JWT_SECRET,
-      { expiresIn: '2h' } // Puedes cambiar el tiempo
+      { expiresIn: '2h' }
     );
 
     res.json({
@@ -99,12 +104,26 @@ router.post('/login', async (req, res) => {
         id: usuario.id,
         nombre: usuario.nombre,
         apellido: usuario.apellido,
-        correo: usuario.email
+        correo: usuario.email,
+        rol: usuario.rol
       }
     });
   } catch (error) {
     console.error('❌ Error en el login:', error);
     res.status(500).json({ success: false, mensaje: '❌ Error del servidor. Intenta de nuevo más tarde.' });
+  }
+});
+
+// 🟡 NUEVA RUTA GET PARA OBTENER USUARIOS
+router.get('/users', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, nombre, apellido, email, rol FROM users ORDER BY nombre'
+    );
+    res.json({ success: true, usuarios: rows });
+  } catch (error) {
+    console.error('❌ Error al obtener usuarios:', error);
+    res.status(500).json({ success: false, mensaje: '❌ Error en el servidor.' });
   }
 });
 

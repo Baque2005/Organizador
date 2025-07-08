@@ -1,10 +1,12 @@
-const express = require('express');
-const app = express();
+const bcrypt = require('bcrypt');
 
-app.get('/', (req, res) => {
-  res.send('¡Servidor funcionando!');
-});
+const passwordPlain = '123456B'; // Contraseña a hashear
+const saltRounds = 10;
 
-app.listen(5000, () => {
-  console.log('Servidor corriendo en http://localhost:5000');
+bcrypt.hash(passwordPlain, saltRounds, (err, hash) => {
+  if (err) {
+    console.error('Error generando hash:', err);
+    return;
+  }
+  console.log('Hash generado:', hash);
 });
